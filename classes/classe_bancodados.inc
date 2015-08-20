@@ -167,29 +167,42 @@ class mysql extends BancoDados {
    public function insert($nomeTabela, $arrCampos, $arrValores)
    {
    
-		if(count($arrCampos) != count($arrValores))
-		{
-		die('não permitido');
-		}
+//		if(count($arrCampos) != count($arrValores))
+//		{
+//		die('não permitido');
+//		}
    
 		$strCampos = implode(', ', $arrCampos);
+		
+		$totalArgumentos = func_num_args();
+		
+		$arrArgumentos= func_get_args();
+		
+		$arrTodosValores = array();
+		
 		function test_alter(&$item1)
 		{
 			$item1 = "'$item1'";
 		}
-		array_walk($arrValores, 'test_alter');
 		
-		$strValores = implode(', ', $arrValores);
-		
-		$sqlToInsert = "insert into $nomeTabela($strCampos) values ($strValores)";
-		
-//		echo $sqlToInsert;
+		for($i=2; $i<$totalArgumentos; $i++)
+		{
+			array_walk($arrArgumentos[$i], 'test_alter');
+			$strValores = '('. implode(', ', $arrArgumentos[$i]) .')';
+			
+			$arrStrTodosValores[] = $strValores;
+		}
 		
 		$this->startTransaction();
-		$statusInsert = $this->executaSQL($sqlToInsert);
+		
+		foreach($arrStrTodosValores as $strValorEmLoop)
+		{
+			$this->executaSQL("insert into $nomeTabela($strCampos) values $strValorEmLoop;");
+		}
+		
 		$this->commit();
 		
-		return $statusInsert;
+		return true;
    }
    
    
