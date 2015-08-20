@@ -48,6 +48,16 @@ abstract class BancoDados {
 		return $this->_senha;
 	}
 	
+	public	function getbanco()
+	{
+		return $this->_Banco;
+	}
+	
+	public	function setbanco($banco)
+	{
+		$this->_Banco = $banco;
+	}
+	
 	public	function setservidor($valor){
 		return $this->_servidor = $valor;
 	}
@@ -65,8 +75,8 @@ abstract class BancoDados {
 		$this->_conn = new mysqli(
 			$this->getservidor(),
 			$this->getusuario(),
-			$this->getsenha()
-		
+			$this->getsenha(),
+			$this->getbanco()		
 		);
 		
 		
@@ -83,17 +93,19 @@ abstract class BancoDados {
 	}
 
 	
-
-	public function SetBanco($_banco) {
+	public function startTransaction() 
+	{
+		$this->executaSQL('START TRANSACTION');	
 	}
 
-	public function startTransaction() {
+	public function commit() 
+	{
+		$this->executaSQL('commit');
 	}
 
-	public function commit() {
-	}
-
-	public function ROLLBACK() {
+	public function ROLLBACK() 
+	{
+		$this->executaSQL('ROLLBACK');
 	}
 
 	protected function isSELECT($_sql,$_res) {
@@ -107,7 +119,6 @@ abstract class BancoDados {
 
 	public function transforma() {
 	}
-
 
 	public function navega() {
 	}
@@ -145,23 +156,51 @@ abstract class BancoDados {
 
 class mysql extends BancoDados {
 	
-   public function __construct(){
-	$this->setservidor('localhost');
-	$this->setusuario('root');
-	$this->setsenha('');
-   
+   public function __construct($host = null, $user = null, $pwd = null, $base = null)
+   {
+	$this->setservidor($host);
+	$this->setusuario($user);
+	$this->setsenha($pwd);
+	$this->setbanco($base);
    } 
+   
+   public function insert($nomeTabela, $arrCampos, $arrValores)
+   {
+   
+		if(count($arrCampos) != count($arrValores))
+		{
+		die('não permitido');
+		}
+   
+		$strCampos = implode(', ', $arrCampos);
+		function test_alter(&$item1)
+		{
+			$item1 = "'$item1'";
+		}
+		array_walk($arrValores, 'test_alter');
+		
+		$strValores = implode(', ', $arrValores);
+		
+		$sqlToInsert = "insert into $nomeTabela($strCampos) values ($strValores)";
+		
+//		echo $sqlToInsert;
+		
+		$this->startTransaction();
+		$statusInsert = $this->executaSQL($sqlToInsert);
+		$this->commit();
+		
+		return $statusInsert;
+   }
+   
    
    public function Conectar(){
 	return $this->getconn();
 	
    }
    
-   public function executaSQL($sql){
+   public function executaSQL($sql)
+   {
 		return $this->getconn()->query($sql);
-   
-   
-   
    }
    
    
