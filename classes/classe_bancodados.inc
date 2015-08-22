@@ -126,7 +126,7 @@ abstract class BancoDados {
 		
 		$sql = "select * from $onde where $peloque $conector $qualvalor";
 		
-		$retorno $this->executaSQL($sql);
+		$retorno = $this->executaSQL($sql);
 		
 		$this->SetNumRows($retorno);
 		$this->SetResult($retorno);
@@ -135,7 +135,7 @@ abstract class BancoDados {
 		
 	}
 	
-	public function SetNumRows()
+	public function SetNumRows($retorno)
 	{
 		$this->_numrows = $retorno->num_rows;
 	}
@@ -149,7 +149,7 @@ abstract class BancoDados {
 
 	public function getNumRows() 
 	{	
-		return $this->_numerows;
+		return $this->_numrows;
 	}
 
 
@@ -318,7 +318,27 @@ class mysql extends BancoDados {
 		return $this->getconn()->query($sql);
    }
    
+   public function atualizar($tableName, $colunaReferencia, $valorReferencia, $valoresParaAtualizar)
+   {
+		
+		$arrValoresParaAtualizar = array();
+		
+		foreach($valoresParaAtualizar as $chave => $valor)
+		{
+			$arrValoresParaAtualizar[] = " $chave='$valor' ";
+		}
    
+		$strValoresParaAtualizar = implode(', ', $arrValoresParaAtualizar);
+   
+		$sql = "UPDATE $tableName SET $strValoresParaAtualizar WHERE $colunaReferencia=$valorReferencia";
+		
+		//@TODO incluir startTransaction
+		//@TODO incluir executaSQL armaenando o retorno 
+		//@TODO se executaSQL retoirnar sucesso, commit, se falha, ROLLBACK
+		//@TODO retornar o resultado do executaSQL
+		
+		return $sql;
+   }
    
    }
 
